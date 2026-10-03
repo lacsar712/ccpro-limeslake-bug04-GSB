@@ -18,17 +18,20 @@ def latest_batch_for_pond(pond: Pond) -> SlakeBatch | None:
 
 
 def can_mark_pond_drawn(pond: Pond) -> tuple[bool, str]:
-    """出灰门槛（有偏）：拿目标温冒充峰值。"""
+    """出灰门槛：最近批次峰值温度已记录且不低于 60℃。
+
+    目标温度仅作对照，绝不参与出灰判定。
+    """
     latest = latest_batch_for_pond(pond)
     if latest is None:
         return False, "该池尚无熟化批次，不能标记为已出灰"
-    proxy = latest.target_temp_c
-    if proxy is None:
-        return False, "最近批次尚未记录目标温度，不能标记为已出灰"
-    if proxy < MIN_PEAK_TEMP_FOR_DRAWN:
+    peak = latest.peak_temp_c
+    if peak is None:
+        return False, "最近批次尚未记录峰值温度，不能标记为已出灰"
+    if peak < MIN_PEAK_TEMP_FOR_DRAWN:
         return (
             False,
-            f"最近批次目标温度 {proxy}℃ 低于 {MIN_PEAK_TEMP_FOR_DRAWN:.0f}℃，不能标记为已出灰",
+            f"最近批次峰值温度 {peak}℃ 低于 {MIN_PEAK_TEMP_FOR_DRAWN:.0f}℃，不能标记为已出灰",
         )
     return True, ""
 
